@@ -15,9 +15,23 @@ target/
 
 ### IntelliJ IDEA ###
 .idea
+.idea/
+out/
+gen/
 *.iws
 *.iml
 *.ipr
+
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+
+# Sistema / Docker
+.DS_Store
+*.log
+docker-compose.override.yml
 
 ### NetBeans ###
 /nbproject/private/
@@ -31,3 +45,4 @@ build/
 
 ### VS Code ###
 .vscode/
+.env

@@ -1,34 +1,41 @@
 package br.com.suzanacavalcante.drawchitecture.controller;
 
 import br.com.suzanacavalcante.drawchitecture.dto.DiagramRequestDTO;
-import br.com.suzanacavalcante.drawchitecture.service.DiagramGenerator;
+import br.com.suzanacavalcante.drawchitecture.model.Diagram;
+import br.com.suzanacavalcante.drawchitecture.service.DiagramService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/diagrams")
 public class DiagramController {
-    private final List<DiagramGenerator> generators;
 
-    public DiagramController(List<DiagramGenerator> generators) {
-        this.generators = generators;
+    private final DiagramService diagramService;
+
+    // Injeção via construtor: Testável e limpo
+    public DiagramController(DiagramService diagramService) {
+        this.diagramService = diagramService;
     }
 
     @PostMapping("/generate")
-    public ResponseEntity<byte[]> generate (@RequestBody @Valid DiagramRequestDTO request) {
-        DiagramGenerator selectedGenerator = generators.stream()
-                .filter(g -> g.getSupportedType().equalsIgnoreCase(request.getType()))
-                .findFirts()
-                .orElseThrow(() -> new RuntimeException("Tipo de Diagrama não suportado!"));
+    public ResponseEntity<String> generate(@RequestBody @Valid DiagramRequestDTO request) {
+        String generatedPath = "outputs/diagrama_provisorio.png"; 
 
-        byte[] imageBytes = selectedGenerator.generate(request.getContent());
+        try {
+            // Lógica de geração da imagem (Mermaid CLI) aqui...
+            
+            // 2. SALVAMENTO NO BANCO:
+            // Assim que a geração termina, chamamos o service
+            Diagram savedDiagram = diagramService.saveDiagram(
+                request.getContent(),
+                generatedPath
+            );
 
-        return ResponseEntity.ok()
-                .header("Content-Type", "image/png")
-                .body(imageBytes);
+            return ResponseEntity.ok("Diagrama gerado e salvo com ID: " + savedDiagram.getId());
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Erro ao processar: " + e.getMessage());
+        }
     }
 }
